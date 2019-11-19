@@ -536,8 +536,13 @@ bool apply_context::cancel_deferred_transaction( const uint128_t& sender_id, acc
 void apply_context::set_random_number_in_action(int32_t rand_number)
 {
     action_trace& trace = trx_context.get_action_trace( action_ordinal );
-    if (!trace.act.random_numbers.size())
-        trace.act.random_numbers.push_back(rand_number);
+    auto& test = const_cast<signed_transaction&>(trx_context.trx);
+//    test.rand_numbers = rand_number;
+//    if (!test.rand_numbers.size())
+//        test.rand_numbers.push_back(rand_number);
+
+//    if (!trace.act.random_numbers.size())
+//        trace.act.random_numbers.push_back(rand_number);
 }
 
 uint32_t apply_context::schedule_action( uint32_t ordinal_of_action_to_schedule, account_name receiver, bool context_free )
