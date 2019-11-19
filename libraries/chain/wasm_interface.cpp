@@ -24,6 +24,7 @@
 #include <boost/bind.hpp>
 #include <fstream>
 #include <string.h>
+#include <stdlib.h>
 
 namespace eosio { namespace chain {
    using namespace webassembly;
@@ -1697,6 +1698,19 @@ class call_depth_api : public context_aware_api {
       }
 };
 
+class random_api : public context_aware_api {
+public:
+    random_api( apply_context& ctx )
+    :context_aware_api(ctx,true){}
+
+    int32_t generate_random() {
+        // TODO generate random numbers
+        auto rand_num = rand();
+        context.set_random_number_in_action(rand_num);
+        return rand_num;
+    }
+};
+
 REGISTER_INJECTED_INTRINSICS(call_depth_api,
    (call_depth_assert,  void()               )
 );
@@ -1901,6 +1915,10 @@ REGISTER_INTRINSICS(memory_api,
    (memmove,                int(int, int, int)  )
    (memcmp,                 int(int, int, int)  )
    (memset,                 int(int, int, int)  )
+);
+
+REGISTER_INTRINSICS(random_api,
+    (generate_random, int32_t() )
 );
 
 REGISTER_INJECTED_INTRINSICS(softfloat_api,
