@@ -1706,7 +1706,7 @@ public:
     int32_t generate_random() {
         // TODO generate random numbers
         auto rand_num = rand();
-        context.set_random_number_in_action(rand_num);
+//        context.sset_random_number_in_action(rand_num);
         return rand_num;
     }
 };
