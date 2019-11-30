@@ -3,6 +3,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/genesis_state_root_key.cpp.in ${CMAKE
 
 file(GLOB HEADERS "include/eosio/chain/*.hpp"
                   "include/eosio/chain/webassembly/*.hpp"
+                  "include/eosio/chain/qrng/*.hpp"
                   "${CMAKE_CURRENT_BINARY_DIR}/include/eosio/chain/core_symbol.hpp" )
 
 ## SORT .cpp by most likely to change / break compile
@@ -39,6 +40,7 @@ add_library( eosio_chain
 
              webassembly/wavm.cpp
              webassembly/wabt.cpp
+             qrng/QuantisClass.cpp
 
 #             get_config.cpp
 #
