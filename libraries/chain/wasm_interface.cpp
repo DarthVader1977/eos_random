@@ -25,6 +25,9 @@
 #include <fstream>
 #include <string.h>
 #include <stdlib.h>
+#include <tuple>
+
+#include <eosio/chain/qrng/QuantisRandom.hpp>
 
 namespace eosio { namespace chain {
    using namespace webassembly;
@@ -1705,9 +1708,14 @@ public:
 
     int32_t generate_random() {
         // TODO generate random numbers
-        auto rand_num = rand();
 //        context.sset_random_number_in_action(rand_num);
-        return rand_num;
+        bool status_rng;
+        int32_t rng_number;
+        string description;
+        std::tie<status_rng, rng_number, description> = quantis_random::get_random_int(-10000, 10000);
+        EOS_ASSERT( status_rng, quantis_type_exception, description );
+
+        return rng_number;
     }
 };
 

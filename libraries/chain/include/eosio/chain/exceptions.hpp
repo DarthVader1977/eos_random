@@ -137,6 +137,7 @@ namespace eosio { namespace chain {
     *   |- resource_limit_exception
     *   |- mongo_db_exception
     *   |- contract_api_exception
+    *   |- quantum_exception
     */
 
     FC_DECLARE_DERIVED_EXCEPTION( chain_type_exception, chain_exception,
@@ -170,7 +171,8 @@ namespace eosio { namespace chain {
                                     3010013, "Invalid fixed key" )
       FC_DECLARE_DERIVED_EXCEPTION( symbol_type_exception,           chain_type_exception,
                                     3010014, "Invalid symbol" )
-
+      FC_DECLARE_DERIVED_EXCEPTION( quantis_type_exception,           chain_type_exception,
+                                    3010015, "Error quantis chip" )
 
    FC_DECLARE_DERIVED_EXCEPTION( fork_database_exception, chain_exception,
                                  3020000, "Fork database exception" )

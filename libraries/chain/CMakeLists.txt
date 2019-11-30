@@ -40,7 +40,6 @@ add_library( eosio_chain
 
              webassembly/wavm.cpp
              webassembly/wabt.cpp
-             qrng/QuantisClass.cpp
 
 #             get_config.cpp
 #
