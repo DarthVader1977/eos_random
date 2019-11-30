@@ -1712,7 +1712,7 @@ public:
         bool status_rng;
         int32_t rng_number;
         string description;
-        std::tie<status_rng, rng_number, description> = quantis_random::get_random_int(-10000, 10000);
+        std::tie(status_rng, rng_number, description) = quantis_random::get_random_int(-10000, 10000);
         EOS_ASSERT( status_rng, quantis_type_exception, description );
 
         return rng_number;
