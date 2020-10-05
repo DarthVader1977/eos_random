@@ -1,8 +1,8 @@
 #!/bin/bash
 set -eo pipefail
-VERSION=1
+VERSION=2
 brew update
-brew install git cmake python@2 python libtool libusb graphviz automake wget gmp llvm@4 pkgconfig doxygen openssl jq boost || :
+brew install git cmake python libtool libusb graphviz automake wget gmp llvm@7 pkgconfig doxygen openssl@1.1 jq boost || :
 # install mongoDB
 cd ~
 curl -OL https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-3.6.3.tgz
