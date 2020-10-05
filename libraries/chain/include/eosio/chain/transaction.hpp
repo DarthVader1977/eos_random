@@ -125,6 +125,7 @@ namespace eosio { namespace chain {
 
       vector<signature_type>    signatures;
       vector<bytes>             context_free_data; ///< for each context-free action, there is an entry here
+//      int32_t rand_numbers = 0;
 
       const signature_type&     sign(const private_key_type& key, const chain_id_type& chain_id);
       signature_type            sign(const private_key_type& key, const chain_id_type& chain_id)const;

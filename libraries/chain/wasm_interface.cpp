@@ -24,6 +24,10 @@
 #include <boost/bind.hpp>
 #include <fstream>
 #include <string.h>
+#include <stdlib.h>
+#include <tuple>
+
+#include <eosio/chain/qrng/QuantisRandom.hpp>
 
 #if defined(EOSIO_EOS_VM_RUNTIME_ENABLED) || defined(EOSIO_EOS_VM_JIT_RUNTIME_ENABLED)
 #include <eosio/vm/allocator.hpp>
@@ -1808,6 +1812,24 @@ class call_depth_api : public context_aware_api {
       }
 };
 
+class random_api : public context_aware_api {
+public:
+    random_api( apply_context& ctx )
+    :context_aware_api(ctx,true){}
+
+    int32_t generate_random() {
+        // TODO generate random numbers
+//        context.sset_random_number_in_action(rand_num);
+        bool status_rng;
+        int32_t rng_number;
+        string description;
+        std::tie(status_rng, rng_number, description) = quantis_random::get_random_int(-10000, 10000);
+        EOS_ASSERT( status_rng, quantis_type_exception, description );
+
+        return rng_number;
+    }
+};
+
 REGISTER_INJECTED_INTRINSICS(call_depth_api,
    (call_depth_assert,  void() )
 );
@@ -2013,6 +2035,10 @@ REGISTER_INTRINSICS(memory_api,
    (memmove,                int(int, int, int)  )
    (memcmp,                 int(int, int, int)  )
    (memset,                 int(int, int, int)  )
+);
+
+REGISTER_INTRINSICS(random_api,
+    (generate_random, int32_t() )
 );
 
 REGISTER_INJECTED_INTRINSICS(softfloat_api,

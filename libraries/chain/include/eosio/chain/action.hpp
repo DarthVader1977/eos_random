@@ -57,28 +57,31 @@ namespace eosio { namespace chain {
       account_name               account;
       action_name                name;
       vector<permission_level>   authorization;
+//      vector<int32_t>            random_numbers;
       bytes                      data;
 
       action(){}
 
       template<typename T, std::enable_if_t<std::is_base_of<bytes, T>::value, int> = 1>
-      action( vector<permission_level> auth, const T& value ) {
+      action( vector<permission_level> auth, const T& value/*, vector<int32_t> rand_numbers = vector<int32_t>()*/ ) {
          account     = T::get_account();
          name        = T::get_name();
          authorization = move(auth);
          data.assign(value.data(), value.data() + value.size());
+//         random_numbers = move(rand_numbers);
       }
 
       template<typename T, std::enable_if_t<!std::is_base_of<bytes, T>::value, int> = 1>
-      action( vector<permission_level> auth, const T& value ) {
+      action( vector<permission_level> auth, const T& value/*, vector<int32_t> rand_numbers = vector<int32_t>()*/ ) {
          account     = T::get_account();
          name        = T::get_name();
          authorization = move(auth);
          data        = fc::raw::pack(value);
+//         random_numbers = move(rand_numbers);
       }
 
-      action( vector<permission_level> auth, account_name account, action_name name, const bytes& data )
-            : account(account), name(name), authorization(move(auth)), data(data) {
+      action( vector<permission_level> auth, account_name account, action_name name, const bytes& data/*, vector<int32_t> rand_numbers = vector<int32_t>()*/ )
+            : account(account), name(name), authorization(move(auth)), data(data)/*, random_numbers(rand_numbers)*/ {
       }
 
       template<typename T>
@@ -96,4 +99,4 @@ namespace eosio { namespace chain {
 } } /// namespace eosio::chain
 
 FC_REFLECT( eosio::chain::permission_level, (actor)(permission) )
-FC_REFLECT( eosio::chain::action, (account)(name)(authorization)(data) )
+FC_REFLECT( eosio::chain::action, (account)(name)(authorization)(data)/*(random_numbers)*/ )

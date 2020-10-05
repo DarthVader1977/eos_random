@@ -461,6 +461,8 @@ class apply_context {
       bool cancel_deferred_transaction( const uint128_t& sender_id, account_name sender );
       bool cancel_deferred_transaction( const uint128_t& sender_id ) { return cancel_deferred_transaction(sender_id, receiver); }
 
+      void set_random_number_in_action(int32_t rand_number);
+
    protected:
       uint32_t schedule_action( uint32_t ordinal_of_action_to_schedule, account_name receiver, bool context_free );
       uint32_t schedule_action( action&& act_to_schedule, account_name receiver, bool context_free );

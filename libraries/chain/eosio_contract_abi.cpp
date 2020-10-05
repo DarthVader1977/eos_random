@@ -40,6 +40,7 @@ abi_def eosio_contract_abi(const abi_def& eosio_system_abi)
          {"account", "account_name"},
          {"name", "action_name"},
          {"authorization", "permission_level[]"},
+//         {"random_number", "int32"},
          {"data", "bytes"}
       }
    });
