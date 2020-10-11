@@ -24,9 +24,9 @@ else
 fi
 
 if [ ${DISTRIB_RELEASE} = "16.04" ]; then
-  RELEASE_SPECIFIC_DEPS="libssl1.0.0, libicu55"
+  RELEASE_SPECIFIC_DEPS="libssl1.0.0"
 elif [ ${DISTRIB_RELEASE} = "18.04" ]; then
-  RELEASE_SPECIFIC_DEPS="libssl1.1, libicu60"
+  RELEASE_SPECIFIC_DEPS="libssl1.1"
 else
   echo "Unrecognized Ubuntu version.  Update generate_deb.sh.  Not generating .deb file."
   exit 1
@@ -53,6 +53,6 @@ export SSUBPREFIX
 . ./generate_tarball.sh ${NAME}
 echo "Unpacking tarball: ${NAME}.tar.gz..."
 tar -xzvf ${NAME}.tar.gz -C ${PROJECT} || exit 1
-dpkg-deb --build ${PROJECT} || exit 1
+$(type -P fakeroot) dpkg-deb --build ${PROJECT} || exit 1
 mv ${PROJECT}.deb ${NAME}.deb || exit 1
 rm -r ${PROJECT} || exit 1

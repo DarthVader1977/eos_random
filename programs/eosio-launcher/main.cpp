@@ -21,7 +21,6 @@
 #include <fc/crypto/private_key.hpp>
 #include <fc/crypto/public_key.hpp>
 #include <fc/io/json.hpp>
-#include <fc/optional.hpp>
 #include <fc/network/ip.hpp>
 #include <fc/reflect/variant.hpp>
 #include <fc/log/logger_config.hpp>
@@ -101,7 +100,7 @@ struct local_identity {
     }
     catch (...) {
       // not an ip address
-      for (const auto n : names) {
+      for (const auto& n : names) {
         if (n == name)
           return true;
       }
@@ -200,7 +199,6 @@ public:
       p2p_port(),
       http_port(),
       file_size(),
-      has_db(false),
       name(),
       node(),
       host(),
@@ -213,7 +211,6 @@ public:
   uint16_t     p2p_port;
   uint16_t     http_port;
   uint16_t     file_size;
-  bool         has_db;
   string       name;
   tn_node_def* node;
   string       host;
@@ -425,8 +422,8 @@ struct launcher_def {
    producer_set_def producer_set;
    string start_temp;
    string start_script;
-   fc::optional<uint32_t> max_block_cpu_usage;
-   fc::optional<uint32_t> max_transaction_cpu_usage;
+   std::optional<uint32_t> max_block_cpu_usage;
+   std::optional<uint32_t> max_transaction_cpu_usage;
    eosio::chain::genesis_state genesis_from_file;
 
    void assign_name (eosd_def &node, bool is_bios);
@@ -801,7 +798,7 @@ launcher_def::define_network () {
   }
   else {
     int ph_count = 0;
-    host_def *lhost = nullptr;
+    std::unique_ptr<host_def> lhost{nullptr};
     size_t host_ndx = 0;
     size_t num_prod_addr = servers.producer.size();
     size_t num_nonprod_addr = servers.nonprod.size();
@@ -810,9 +807,8 @@ launcher_def::define_network () {
       if (ph_count == 0) {
         if (lhost) {
           bindings.emplace_back(move(*lhost));
-          delete lhost;
         }
-        lhost = new host_def;
+        lhost.reset(new host_def);
         lhost->genesis = genesis.string();
         if (host_ndx < num_prod_addr ) {
            do_bios = servers.producer[host_ndx].has_bios;
@@ -842,24 +838,14 @@ launcher_def::define_network () {
 
       eosd_def eosd;
       assign_name(eosd, do_bios);
-      eosd.has_db = false;
 
-      if (servers.db.size()) {
-        for (auto &dbn : servers.db) {
-          if (lhost->host_name == dbn) {
-            eosd.has_db = true;
-            break;
-         }
-        }
-      }
       aliases.push_back(eosd.name);
-      eosd.set_host (lhost, do_bios);
+      eosd.set_host (lhost.get(), do_bios);
       do_bios = false;
       lhost->instances.emplace_back(move(eosd));
       --ph_count;
     } // for i
     bindings.emplace_back( move(*lhost) );
-    delete lhost;
   }
 }
 
@@ -1115,9 +1101,9 @@ launcher_def::write_config_file (tn_node_def &node) {
     }
     if (allowed_connections & PC_SPECIFIED) {
       cfg << "allowed-connection = specified\n";
-      cfg << "peer-key = \"" << string(node.keys.begin()->get_public_key()) << "\"\n";
-      cfg << "peer-private-key = [\"" << string(node.keys.begin()->get_public_key())
-          << "\",\"" << string(*node.keys.begin()) << "\"]\n";
+      cfg << "peer-key = \"" << node.keys.begin()->get_public_key().to_string() << "\"\n";
+      cfg << "peer-private-key = [\"" << node.keys.begin()->get_public_key().to_string()
+          << "\",\"" << node.keys.begin()->to_string() << "\"]\n";
     }
   }
 
@@ -1128,18 +1114,15 @@ launcher_def::write_config_file (tn_node_def &node) {
   for (const auto &p : node.peers) {
      cfg << "p2p-peer-address = " << network.nodes.find(p)->second.instance->p2p_endpoint << "\n";
   }
-  if (instance.has_db || node.producers.size()) {
+  if (node.producers.size()) {
     for (const auto &kp : node.keys ) {
-       cfg << "private-key = [\"" << string(kp.get_public_key())
-           << "\",\"" << string(kp) << "\"]\n";
+       cfg << "private-key = [\"" << kp.get_public_key().to_string()
+           << "\",\"" << kp.to_string() << "\"]\n";
     }
     for (auto &p : node.producers) {
       cfg << "producer-name = " << p << "\n";
     }
     cfg << "plugin = eosio::producer_plugin\n";
-  }
-  if( instance.has_db ) {
-    cfg << "plugin = eosio::mongo_db_plugin\n";
   }
   cfg << "plugin = eosio::net_plugin\n";
   cfg << "plugin = eosio::chain_api_plugin\n"
@@ -1167,28 +1150,34 @@ launcher_def::write_logging_config_file(tn_node_def &node) {
 
   auto log_config = fc::logging_config::default_config();
   if(gelf_enabled) {
-    log_config.appenders.push_back(
-          fc::appender_config( "net", "gelf",
-              fc::mutable_variant_object()
-                  ( "endpoint", node.gelf_endpoint )
-                  ( "host", instance.name )
-             ) );
-    log_config.loggers.front().appenders.push_back("net");
-
-    fc::logger_config p2p ("net_plugin_impl");
-    p2p.level=fc::log_level::debug;
-    p2p.appenders.push_back ("stderr");
-    p2p.appenders.push_back ("net");
-    log_config.loggers.emplace_back(p2p);
-
-     fc::logger_config http("http_plugin");
-     http.level=fc::log_level::debug;
-     http.appenders.push_back("stderr");
-     http.appenders.push_back("net");
-     log_config.loggers.emplace_back(http);
+     log_config.appenders.push_back(
+           fc::appender_config( "net", "gelf",
+                           fc::mutable_variant_object()
+                                 ( "endpoint", node.gelf_endpoint )
+                                 ( "host", instance.name )
+           ) );
+     log_config.loggers.front().appenders.push_back( "net" );
   }
 
-  auto str = fc::json::to_pretty_string( log_config, fc::json::stringify_large_ints_and_doubles );
+  fc::logger_config p2p( "net_plugin_impl" );
+  p2p.level = fc::log_level::debug;
+  p2p.appenders.push_back( "stderr" );
+  if( gelf_enabled ) p2p.appenders.push_back( "net" );
+  log_config.loggers.emplace_back( p2p );
+
+  fc::logger_config http( "http_plugin" );
+  http.level = fc::log_level::debug;
+  http.appenders.push_back( "stderr" );
+  if( gelf_enabled ) http.appenders.push_back( "net" );
+  log_config.loggers.emplace_back( http );
+
+  fc::logger_config pp( "producer_plugin" );
+  pp.level = fc::log_level::debug;
+  pp.appenders.push_back( "stderr" );
+  if( gelf_enabled ) pp.appenders.push_back( "net" );
+  log_config.loggers.emplace_back( pp );
+
+  auto str = fc::json::to_pretty_string( log_config, fc::time_point::maximum(), fc::json::output_formatting::stringify_large_ints_and_doubles );
   cfg.write( str.c_str(), str.size() );
   cfg.close();
 }
@@ -1201,7 +1190,7 @@ launcher_def::init_genesis () {
       eosio::chain::genesis_state default_genesis;
       fc::json::save_to_file( default_genesis, genesis_path, true );
    }
-   string bioskey = string(network.nodes["bios"].keys[0].get_public_key());
+   string bioskey = network.nodes["bios"].keys[0].get_public_key().to_string();
 
    fc::json::from_file(genesis_path).as<eosio::chain::genesis_state>(genesis_from_file);
    genesis_from_file.initial_key = public_key_type(bioskey);
@@ -1238,7 +1227,7 @@ launcher_def::write_setprods_file() {
       if (p.producer_name != "eosio")
          no_bios.schedule.push_back(p);
    }
-  auto str = fc::json::to_pretty_string( no_bios, fc::json::stringify_large_ints_and_doubles );
+  auto str = fc::json::to_pretty_string( no_bios, fc::time_point::maximum(), fc::json::output_formatting::stringify_large_ints_and_doubles );
   psfile.write( str.c_str(), str.size() );
   psfile.close();
 }
@@ -1271,7 +1260,7 @@ launcher_def::write_bios_boot () {
          }
          else if (key == "prodkeys" ) {
             for (auto &node : network.nodes) {
-               brb << "wcmd import -n ignition --private-key " << string(node.second.keys[0]) << "\n";
+               brb << "wcmd import -n ignition --private-key " << node.second.keys[0].to_string() << "\n";
             }
          }
          else if (key == "cacmd") {
@@ -1280,7 +1269,7 @@ launcher_def::write_bios_boot () {
                   continue;
                }
                brb << "cacmd " << p.producer_name
-                   << " " << string(p.block_signing_key) << " " << string(p.block_signing_key) << "\n";
+                   << " " << p.block_signing_key.to_string() << " " << p.block_signing_key.to_string() << "\n";
             }
          }
       }
@@ -1540,18 +1529,7 @@ launcher_def::launch (eosd_def &instance, string &gts) {
     eosdcmd += "--skip-transaction-signatures ";
   }
   if (!eosd_extra_args.empty()) {
-    if (instance.name == "bios") {
-       // Strip the mongo-related options out of the bios node so
-       // the plugins don't conflict between 00 and bios.
-       regex r("--plugin +eosio::mongo_db_plugin");
-       string args = std::regex_replace (eosd_extra_args,r,"");
-       regex r2("--mongodb-uri +[^ ]+");
-       args = std::regex_replace (args,r2,"");
-       eosdcmd += args + " ";
-    }
-    else {
-       eosdcmd += eosd_extra_args + " ";
-    }
+    eosdcmd += eosd_extra_args + " ";
   }
   if (instance.name != "bios" && !specific_nodeos_args.empty()) {
      const auto node_num = boost::lexical_cast<uint16_t,string>(instance.get_node_num());
@@ -1906,7 +1884,7 @@ void write_default_config(const bfs::path& cfg_file, const options_description &
    }
 
    std::ofstream out_cfg( bfs::path(cfg_file).make_preferred().string());
-   for(const boost::shared_ptr<bpo::option_description> od : cfg.options())
+   for(const boost::shared_ptr<bpo::option_description>& od : cfg.options())
    {
       if(!od->description().empty()) {
          out_cfg << "# " << od->description() << std::endl;
@@ -2079,7 +2057,7 @@ FC_REFLECT( host_def,
 // @ignore node, dot_label_str
 FC_REFLECT( eosd_def,
             (config_dir_name)(data_dir_name)(p2p_port)
-            (http_port)(file_size)(has_db)(name)(host)
+            (http_port)(file_size)(name)(host)
             (p2p_endpoint) )
 
 // @ignore instance, gelf_endpoint

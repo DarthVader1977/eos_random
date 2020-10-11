@@ -42,14 +42,13 @@ function usage() {
   -y          Noninteractive mode (answers yes to every prompt)
   -c          Enable Code Coverage
   -d          Generate Doxygen
-  -m          Build MongoDB dependencies
    \\n" "$0" 1>&2
    exit 1
 }
 
 TIME_BEGIN=$( date -u +%s )
 if [ $# -ne 0 ]; then
-   while getopts "o:s:b:i:ycdhmP" opt; do
+   while getopts "o:s:b:i:ycdhP" opt; do
       case "${opt}" in
          o )
             options=( "Debug" "Release" "RelWithDebInfo" "MinSizeRel" )
@@ -83,9 +82,6 @@ if [ $# -ne 0 ]; then
          ;;
          d )
             ENABLE_DOXYGEN=true
-         ;;
-         m )
-            ENABLE_MONGO=true
          ;;
          P )
             PIN_COMPILER=true
@@ -122,8 +118,7 @@ echo "$( date -u )"
 echo "User: ${CURRENT_USER}"
 # echo "git head id: %s" "$( cat .git/refs/heads/master )"
 echo "Current branch: $( execute git rev-parse --abbrev-ref HEAD 2>/dev/null )"
-
-( [[ ! $NAME == "Ubuntu" ]] && [[ ! $ARCH == "Darwin" ]] ) && set -i # Ubuntu doesn't support interactive mode since it uses dash + Some folks are having this issue on Darwin; colors aren't supported yet anyway
+( [[ ! $NAME == "Ubuntu" ]] && [[ ! $ARCH == "Darwin" ]]  && [[ ! $NAME == "CentOS Linux" ]]) && set -i # Ubuntu doesn't support interactive mode since it uses dash + Some folks are having this issue on Darwin; colors aren't supported yet anyway
 
 # Ensure sudo is available (only if not using the root user)
 ensure-sudo
@@ -135,8 +130,6 @@ ensure-git-clone
 install-directory-prompt
 # If the same version has already been installed...
 previous-install-prompt
-# Prompt user and asks if we should install mongo or not
-prompt-mongo-install
 # Setup directories and envs we need (must come last)
 setup
 
@@ -162,7 +155,6 @@ fi
 # Setup based on architecture
 if [[ $ARCH == "Linux" ]]; then
    export CMAKE=${CMAKE:-${EOSIO_INSTALL_DIR}/bin/cmake}
-   OPENSSL_ROOT_DIR=/usr/include/openssl
    [[ ! -e /etc/os-release ]] && print_supported_linux_distros_and_exit
    case $NAME in
       "Amazon Linux AMI" | "Amazon Linux")
@@ -181,9 +173,7 @@ if [[ $ARCH == "Linux" ]]; then
 fi
 
 if [ "$ARCH" == "Darwin" ]; then
-   # EOSIO_INSTALL_DIR/lib/cmake: mongo_db_plugin.cpp:25:10: fatal error: 'bsoncxx/builder/basic/kvp.hpp' file not found
    FILE="${SCRIPT_DIR}/eosio_build_darwin.sh"
-   OPENSSL_ROOT_DIR=/usr/local/opt/openssl
    export CMAKE=${CMAKE}
 fi
 
@@ -207,7 +197,6 @@ if $VERBOSE; then
 fi
 execute cd $BUILD_DIR
 # LOCAL_CMAKE_FLAGS
-$ENABLE_MONGO && LOCAL_CMAKE_FLAGS="-DBUILD_MONGO_DB_PLUGIN=true ${LOCAL_CMAKE_FLAGS}" # Enable Mongo DB Plugin if user has enabled -m
 if $PIN_COMPILER; then
    CMAKE_PREFIX_PATHS="${CMAKE_PREFIX_PATHS};${LLVM_ROOT}"
    LOCAL_CMAKE_FLAGS="${PINNED_TOOLCHAIN} -DCMAKE_PREFIX_PATH='${CMAKE_PREFIX_PATHS}' ${LOCAL_CMAKE_FLAGS}"
@@ -217,7 +206,7 @@ fi
 $ENABLE_DOXYGEN && LOCAL_CMAKE_FLAGS="-DBUILD_DOXYGEN='${DOXYGEN}' ${LOCAL_CMAKE_FLAGS}"
 $ENABLE_COVERAGE_TESTING && LOCAL_CMAKE_FLAGS="-DENABLE_COVERAGE_TESTING='${ENABLE_COVERAGE_TESTING}' ${LOCAL_CMAKE_FLAGS}"
 
-execute bash -c "$CMAKE -DCMAKE_BUILD_TYPE='${CMAKE_BUILD_TYPE}' -DCORE_SYMBOL_NAME='${CORE_SYMBOL_NAME}' -DOPENSSL_ROOT_DIR='${OPENSSL_ROOT_DIR}' -DCMAKE_INSTALL_PREFIX='${EOSIO_INSTALL_DIR}' ${LOCAL_CMAKE_FLAGS} '${REPO_ROOT}'"
+execute bash -c "$CMAKE -DCMAKE_BUILD_TYPE='${CMAKE_BUILD_TYPE}' -DCORE_SYMBOL_NAME='${CORE_SYMBOL_NAME}' -DCMAKE_INSTALL_PREFIX='${EOSIO_INSTALL_DIR}' ${LOCAL_CMAKE_FLAGS} '${REPO_ROOT}'"
 execute make -j$JOBS
 execute cd $REPO_ROOT 1>/dev/null
 
@@ -239,11 +228,7 @@ echo "${COLOR_YELLOW}Uninstall with: ${SCRIPT_DIR}/eosio_uninstall.sh${COLOR_NC}
 
 echo ""
 echo "${COLOR_CYAN}If you wish to perform tests to ensure functional code:${COLOR_NC}"
-if $ENABLE_MONGO; then
-   echo "${BIN_DIR}/mongod --dbpath ${MONGODB_DATA_DIR} -f ${MONGODB_CONF} --logpath ${MONGODB_LOG_DIR}/mongod.log &"
-   PATH_TO_USE=" PATH=\$PATH:$OPT_DIR/mongodb/bin"
-fi
-echo "cd ${BUILD_DIR} &&${PATH_TO_USE} make test" # PATH is set as currently 'mongo' binary is required for the mongodb test
+echo "cd ${BUILD_DIR} && make test"
 
 echo ""
 resources
