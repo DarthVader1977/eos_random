@@ -1908,6 +1908,11 @@ namespace webassembly {
          */
          int32_t get_action(uint32_t type, uint32_t index, legacy_span<char> buffer) const;
 
+         /**
+          * Get qauntum random
+          **/
+         int32_t generate_random();
+
          // compiler builtins api
          void __ashlti3(legacy_ptr<int128_t>, uint64_t, uint64_t, uint32_t) const;
          void __ashrti3(legacy_ptr<int128_t>, uint64_t, uint64_t, uint32_t) const;

@@ -1,6 +1,10 @@
 #include <eosio/chain/webassembly/interface.hpp>
 #include <eosio/chain/global_property_object.hpp>
 #include <eosio/chain/apply_context.hpp>
+#include <stdlib.h>
+#include <tuple>
+
+#include <eosio/chain/quantis/QuantisRandom.hpp>
 
 namespace eosio { namespace chain { namespace webassembly {
    void interface::send_inline( legacy_span<const char> data ) {
@@ -32,4 +36,5 @@ namespace eosio { namespace chain { namespace webassembly {
    bool interface::cancel_deferred( legacy_ptr<const uint128_t> val ) {
       return context.cancel_deferred_transaction( *val );
    }
+
 }}} // ns eosio::chain::webassembly

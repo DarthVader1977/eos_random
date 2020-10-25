@@ -277,7 +277,8 @@ inline constexpr auto get_intrinsic_table() {
       "env.get_wasm_parameters_packed",
       "env.set_wasm_parameters_packed",
       "env.get_parameters_packed",
-      "env.set_parameters_packed"
+      "env.set_parameters_packed",
+      "env.generate_random"
    );
 }
 inline constexpr std::size_t find_intrinsic_index(std::string_view hf) {

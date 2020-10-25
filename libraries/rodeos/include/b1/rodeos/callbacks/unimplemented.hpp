@@ -136,6 +136,9 @@ struct unimplemented_callbacks {
    // context_free_api
    int get_context_free_data(int, int, int) { return unimplemented<int>("get_context_free_data"); }
 
+   // random
+   int32_t generate_random() { return unimplemented<int32_t>("generate_random"); }
+
    template <typename Rft>
    static void register_callbacks() {
       // todo: preconditions
@@ -239,6 +242,10 @@ struct unimplemented_callbacks {
 
       // context_free_api
       Rft::template add<&Derived::get_context_free_data>("env", "get_context_free_data");
+
+      // random
+      Rft::template add<&Derived::generate_random>("env", "generate_random");
+
    } // register_callbacks()
 };   // unimplemented_callbacks
 

@@ -505,6 +505,9 @@ REGISTER_CF_HOST_FUNCTION(tapos_block_num);
 REGISTER_CF_HOST_FUNCTION(tapos_block_prefix);
 REGISTER_LEGACY_CF_HOST_FUNCTION(get_action);
 
+// random
+REGISTER_HOST_FUNCTION(generate_random);
+
 // compiler builtins api
 REGISTER_LEGACY_CF_HOST_FUNCTION(__ashlti3);
 REGISTER_LEGACY_CF_HOST_FUNCTION(__ashrti3);

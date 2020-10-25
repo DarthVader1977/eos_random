@@ -72,6 +72,7 @@ set(CHAIN_WEBASSEMBLY_SOURCES
    webassembly/softfloat.cpp
    webassembly/system.cpp
    webassembly/transaction.cpp
+   webassembly/random.cpp
 )
 
 ## SORT .cpp by most likely to change / break compile
