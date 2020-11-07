@@ -57,7 +57,7 @@ namespace eosio { namespace chain {
       fc::unsigned_int       max_net_usage_words = 0UL; /// upper limit on total network bandwidth (in 8 byte words) billed for this transaction
       uint8_t                max_cpu_usage_ms    = 0; /// upper limit on the total CPU time billed for this transaction
       fc::unsigned_int       delay_sec           = 0UL; /// number of seconds to delay this transaction for during which it may be canceled.
-      vector<int32_t>        random_numbers      = 0;
+      vector<int32_t>        random_numbers;
 
       void set_reference_block( const block_id_type& reference_block );
       bool verify_reference_block( const block_id_type& reference_block )const;
