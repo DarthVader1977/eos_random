@@ -416,12 +416,13 @@ namespace impl {
       template<typename Resolver>
       static void add( mutable_variant_object &out, const char* name, const action& act, Resolver resolver, abi_traverse_context& ctx )
       {
-         static_assert(fc::reflector<action>::total_member_count == 4);
+         static_assert(fc::reflector<action>::total_member_count == 5);
          auto h = ctx.enter_scope();
          mutable_variant_object mvo;
          mvo("account", act.account);
          mvo("name", act.name);
          mvo("authorization", act.authorization);
+         mvo("test", act.test);
 
          try {
             auto abi = resolver(act.account);
