@@ -57,7 +57,6 @@ namespace eosio { namespace chain {
       account_name             account;
       action_name              name;
       vector<permission_level> authorization;
-      vector<int32_t> test;
 
       action_base() = default;
 
@@ -135,5 +134,5 @@ namespace eosio { namespace chain {
 } } /// namespace eosio::chain
 
 FC_REFLECT( eosio::chain::permission_level, (actor)(permission) )
-FC_REFLECT( eosio::chain::action_base, (account)(name)(authorization)(test) )
+FC_REFLECT( eosio::chain::action_base, (account)(name)(authorization) )
 FC_REFLECT_DERIVED( eosio::chain::action, (eosio::chain::action_base), (data) )
